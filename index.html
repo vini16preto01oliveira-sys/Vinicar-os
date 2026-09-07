@@ -89,7 +89,7 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
   <div><label>Fotos da entrada</label><input id="fotosEntrada" type="file" accept="image/*" multiple></div>
   <div><label>Observação das fotos</label><input id="obsFotos" placeholder="Ex.: riscos lado direito, para-choque..."></div>
 </div>
-<h3>Assinatura do cliente</h3>
+<h3>Assinatura do responsável</h3>
 <div class="signature-wrap">
   <canvas id="signaturePad" width="900" height="220"></canvas>
 </div>
@@ -215,7 +215,7 @@ function renderOS(){
   <p><b>Subtotal:</b> ${money(subtotal(o))}<br><b>Desconto:</b> ${money(o.desconto||0)}<br><b>Total:</b> ${money(total(o))}</p>
 
   ${o.fotos&&o.fotos.length?`<h3>Fotos da entrada</h3><div class="photo-grid">${o.fotos.map(src=>`<img src="${src}" alt="Foto do veículo">`).join('')}</div><p class="muted">${o.obsFotos||''}</p>`:''}
-  ${o.assinatura?`<h3>Assinatura do cliente</h3><div style="max-width:420px;border-top:1px solid #999;padding-top:8px"><img src="${o.assinatura}" alt="Assinatura do cliente" style="width:100%;max-height:140px;object-fit:contain"></div>`:''}
+  ${o.assinatura?`<h3>Assinatura do responsável</h3><div style="max-width:420px;border-top:1px solid #999;padding-top:8px"><img src="${o.assinatura}" alt="Assinatura do responsável" style="width:100%;max-height:140px;object-fit:contain"></div>`:''}
  </div>
  </div>`).join(''):'Nenhuma OS encontrada.';
 }
