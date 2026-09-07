@@ -1,13 +1,109 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111827" />
-    <title>Vinicar Auto Center • OS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vinicar Auto Center - OS</title>
+<style>
+:root{--red:#d71920;--dark:#181818;--gray:#666;--light:#f4f4f4}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eee;color:#222}
+header{background:#181818;color:white;padding:18px 22px;border-bottom:4px solid var(--red)}
+header b{font-size:22px} header span{color:#ddd}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:#fff;position:sticky;top:0}
+button{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer}
+nav button,.primary{background:var(--red);color:#fff}.secondary{background:#333;color:#fff}
+main{max-width:1100px;margin:auto;padding:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px #0001;margin-bottom:14px}
+.stat b{font-size:28px;color:var(--red)}h2{margin-top:0}
+label{display:block;font-size:13px;font-weight:bold;margin:8px 0 4px}
+input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:7px}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.three{grid-template-columns:repeat(3,1fr)}
+table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
+.badge{padding:5px 8px;border-radius:15px;background:#eee}.hide{display:none}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:700px){.grid,.row,.three{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}table{font-size:12px}}
+@media(max-width:460px){.row,.three{grid-template-columns:1fr}}
+@media print{nav,.no-print{display:none}body{background:white}.card{box-shadow:none}}
+</style>
+</head>
+<body>
+<header><b>VINICAR <span>AUTO CENTER</span></b><div>Seu carro, nossa paixão • Sistema de Ordem de Serviço</div></header>
+<nav>
+<button onclick="show('painel')">Painel</button><button onclick="show('entrada')">Entrada</button>
+<button onclick="show('os')">Ordens de Serviço</button><button onclick="show('clientes')">Clientes</button>
+</nav>
+<main>
+<section id="painel">
+<div class="grid">
+<div class="card stat">Veículos na oficina<br><b id="sOficina">0</b></div>
+<div class="card stat">Em serviço<br><b id="sServico">0</b></div>
+<div class="card stat">Prontos<br><b id="sPronto">0</b></div>
+<div class="card stat">Entregues<br><b id="sEntregue">0</b></div>
+</div>
+<div class="card"><h2>Ordens recentes</h2><div id="recentes"></div></div>
+</section>
+
+<section id="entrada" class="hide"><div class="card"><h2>Entrada de veículo / Nova OS</h2>
+<div class="row"><div><label>Cliente</label><input id="cliente"></div><div><label>WhatsApp</label><input id="fone"></div></div>
+<div class="three row"><div><label>Placa</label><input id="placa"></div><div><label>Veículo</label><input id="veiculo"></div><div><label>KM</label><input id="km" type="number"></div></div>
+<div class="row"><div><label>Combustível</label><select id="comb"><option>Reserva</option><option>1/4</option><option>1/2</option><option>3/4</option><option>Cheio</option></select></div><div><label>Previsão</label><input id="previsao" type="date"></div></div>
+<label>Defeito / serviço solicitado</label><textarea id="defeito"></textarea>
+<label>Avarias / observações de entrada</label><textarea id="avarias"></textarea>
+<div class="actions"><button class="primary" onclick="novaOS()">Registrar entrada e abrir OS</button></div>
+</div></section>
+
+<section id="os" class="hide"><div class="card"><h2>Ordens de Serviço</h2>
+<input id="busca" placeholder="Pesquisar por OS, cliente, placa ou veículo" oninput="renderOS()">
+<div id="listaOS"></div></div></section>
+
+<section id="clientes" class="hide"><div class="card"><h2>Clientes e veículos</h2><div id="listaClientes"></div></div></section>
+</main>
+<script>
+let data=JSON.parse(localStorage.getItem('vinicar_os_v2')||'[]');
+const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+function save(){localStorage.setItem('vinicar_os_v2',JSON.stringify(data));render()}
+function show(id){document.querySelectorAll('main>section').forEach(x=>x.classList.add('hide'));document.getElementById(id).classList.remove('hide');render()}
+function novaOS(){
+ let c=cliente.value.trim(),p=placa.value.trim().toUpperCase();
+ if(!c||!p){alert('Preencha cliente e placa.');return}
+ data.unshift({id:Date.now(),num:String(Date.now()).slice(-6),cliente:c,fone:fone.value,placa:p,veiculo:veiculo.value,km:km.value,comb:comb.value,previsao:previsao.value,defeito:defeito.value,avarias:avarias.value,status:'Aguardando',entrada:new Date().toLocaleString('pt-BR'),saida:'',pecas:[],servicos:[]});
+ save(); document.querySelectorAll('#entrada input,#entrada textarea').forEach(x=>x.value='');show('os')
+}
+function total(o){return [...o.pecas,...o.servicos].reduce((a,x)=>a+Number(x.valor||0),0)}
+function addItem(id,tipo){
+ let desc=prompt(tipo==='pecas'?'Descrição da peça:':'Descrição da mão de obra:'); if(!desc)return;
+ let valor=prompt('Valor em R$ (ex.: 150,00):','0'); valor=Number(String(valor).replace('.','').replace(',','.'))||0;
+ let o=data.find(x=>x.id===id);o[tipo].push({desc,valor});save()
+}
+function statusOS(id){
+ let o=data.find(x=>x.id===id);let opts=['Aguardando','Em serviço','Aguardando peças','Pronto','Entregue'];
+ let s=prompt('Novo status:\\n'+opts.join(' | '),o.status);if(!s)return;
+ o.status=s;if(s.toLowerCase()==='entregue'&&!o.saida)o.saida=new Date().toLocaleString('pt-BR');save()
+}
+function whatsapp(id){
+ let o=data.find(x=>x.id===id);let tel=(o.fone||'').replace(/\D/g,'');if(tel&&!tel.startsWith('55'))tel='55'+tel;
+ let msg=`Vinicar Auto Center%0AOS ${o.num}%0A${o.veiculo} - ${o.placa}%0AStatus: ${o.status}%0ATotal: ${encodeURIComponent(money(total(o)))}`;
+ window.open(`https://wa.me/${tel}?text=${msg}`,'_blank')
+}
+function renderOS(){
+ let q=(document.getElementById('busca')?.value||'').toLowerCase();
+ let arr=data.filter(o=>[o.num,o.cliente,o.placa,o.veiculo].join(' ').toLowerCase().includes(q));
+ listaOS.innerHTML=arr.length?arr.map(o=>`<div class="card">
+ <b>OS #${o.num}</b> • <span class="badge">${o.status}</span><br><b>${o.cliente}</b> — ${o.veiculo||'Veículo'} • ${o.placa}<br>
+ <small>Entrada: ${o.entrada}${o.saida?' • Saída: '+o.saida:''}</small><p>${o.defeito||''}</p>
+ <b>Peças</b>: ${o.pecas.map(x=>x.desc+' ('+money(x.valor)+')').join(', ')||'—'}<br>
+ <b>Mão de obra</b>: ${o.servicos.map(x=>x.desc+' ('+money(x.valor)+')').join(', ')||'—'}<br>
+ <h3>Total: ${money(total(o))}</h3>
+ <div class="actions no-print"><button class="secondary" onclick="addItem(${o.id},'pecas')">+ Peça</button><button class="secondary" onclick="addItem(${o.id},'servicos')">+ Mão de obra</button><button class="primary" onclick="statusOS(${o.id})">Alterar status</button><button onclick="whatsapp(${o.id})">WhatsApp</button><button onclick="window.print()">Imprimir/PDF</button></div>
+ </div>`).join(''):'Nenhuma OS encontrada.';
+}
+function render(){
+ sOficina.textContent=data.filter(o=>o.status!=='Entregue').length;
+ sServico.textContent=data.filter(o=>o.status==='Em serviço').length;
+ sPronto.textContent=data.filter(o=>o.status==='Pronto').length;
+ sEntregue.textContent=data.filter(o=>o.status==='Entregue').length;
+ recentes.innerHTML=data.slice(0,5).map(o=>`<p><b>OS #${o.num}</b> — ${o.placa} — ${o.cliente} — ${o.status}</p>`).join('')||'Nenhuma OS cadastrada.';
+ listaClientes.innerHTML=data.length?`<table><tr><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Placa</th></tr>${data.map(o=>`<tr><td>${o.cliente}</td><td>${o.fone||''}</td><td>${o.veiculo||''}</td><td>${o.placa}</td></tr>`).join('')}</table>`:'Nenhum cliente cadastrado.';
+ renderOS()
+}
+render();
+</script>
+</body></html>
