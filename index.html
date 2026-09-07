@@ -6,7 +6,7 @@
 <style>
 :root{--red:#d71920;--dark:#181818;--gray:#666;--light:#f4f4f4;--green:#1b8f4d}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eee;color:#222}
-header{background:#181818;color:white;padding:14px 22px;border-bottom:4px solid var(--red);display:flex;align-items:center;gap:16px}header img{width:145px;max-height:90px;object-fit:contain;background:#fff;border-radius:8px;padding:4px}.brand-text{min-width:0}
+header{background:#181818;color:white;padding:14px 22px;border-bottom:4px solid var(--red);display:flex;align-items:center;gap:16px}header img{width:190px;max-height:105px;object-fit:contain;background:#fff;border-radius:10px;padding:6px}.brand-text{min-width:0}
 header b{font-size:22px} header span{color:#ddd}
 nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:#fff;position:sticky;top:0;z-index:5}
 button{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer}
@@ -29,6 +29,24 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 @media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.row,.three,.four{grid-template-columns:1fr 1fr}.checks{grid-template-columns:1fr 1fr}.itemline{grid-template-columns:1fr 1fr}.itemline>*:first-child{grid-column:1/-1}}
 @media(max-width:460px){.row,.three,.four,.checks{grid-template-columns:1fr}}
 @media print{header img{width:120px!important}nav,.no-print{display:none!important}body{background:white}header{background:white;color:#111;border-bottom:2px solid #111}.card{box-shadow:none;border:0;padding:0}.os-card:not(.print-target){display:none}.print-target{display:block}.print-target .details{display:block!important}}
+
+.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.photo-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid #ddd}
+.signature-wrap{border:1px solid #ccc;border-radius:8px;background:#fff;padding:8px}
+#signaturePad{width:100%;height:180px;display:block;touch-action:none;background:#fff;border-radius:6px}
+.print-header{display:none}
+.os-print-title{font-size:24px;font-weight:800;margin-bottom:4px}
+.company-meta{font-size:13px;line-height:1.5}
+@media(max-width:700px){.photo-grid{grid-template-columns:1fr 1fr}}
+@media print{
+  header{display:none!important}
+  .print-header{display:flex!important;align-items:center;gap:16px;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}
+  .print-header img{width:130px!important;max-height:85px!important;object-fit:contain}
+  .print-header .company-meta{font-size:12px}
+  .photo-grid{grid-template-columns:repeat(2,1fr)}
+  .photo-grid img{max-height:180px}
+}
+
 </style>
 </head>
 <body>
@@ -65,7 +83,21 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 <label class="check"><input type="checkbox" id="cChave"> Chave de roda</label>
 <label class="check"><input type="checkbox" id="cObjetos"> Objetos no veículo</label>
 </div>
+
+<h3>Fotos do veículo</h3>
+<div class="row">
+  <div><label>Fotos da entrada</label><input id="fotosEntrada" type="file" accept="image/*" multiple></div>
+  <div><label>Observação das fotos</label><input id="obsFotos" placeholder="Ex.: riscos lado direito, para-choque..."></div>
+</div>
+<h3>Assinatura do cliente</h3>
+<div class="signature-wrap">
+  <canvas id="signaturePad" width="900" height="220"></canvas>
+</div>
+<div class="actions">
+  <button type="button" class="secondary" onclick="limparAssinatura()">Limpar assinatura</button>
+</div>
 <div class="actions"><button class="primary" onclick="novaOS()">Registrar entrada e abrir OS</button></div>
+
 </div></section>
 
 <section id="os" class="hide"><div class="card"><h2>Ordens de Serviço</h2>
@@ -80,7 +112,7 @@ let data=JSON.parse(localStorage.getItem('vinicar_os_v2')||'[]').map(normalize);
 function normalize(o){
   o.pecas=o.pecas||[]; o.servicos=o.servicos||[];
   o.desconto=Number(o.desconto||0); o.pagamento=o.pagamento||'Não informado';
-  o.checklist=o.checklist||{}; o.doc=o.doc||''; o.saida=o.saida||'';
+  o.checklist=o.checklist||{}; o.doc=o.doc||''; o.saida=o.saida||''; o.fotos=o.fotos||[]; o.obsFotos=o.obsFotos||''; o.assinatura=o.assinatura||'';
   o.pecas=o.pecas.map(x=>({desc:x.desc||'',qtd:Number(x.qtd||1),unit:Number(x.unit||x.valor||0)}));
   o.servicos=o.servicos.map(x=>({desc:x.desc||'',qtd:Number(x.qtd||1),unit:Number(x.unit||x.valor||0)}));
   return o
@@ -88,17 +120,27 @@ function normalize(o){
 const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 function save(){localStorage.setItem('vinicar_os_v2',JSON.stringify(data));render()}
 function show(id){document.querySelectorAll('main>section').forEach(x=>x.classList.add('hide'));document.getElementById(id).classList.remove('hide');render()}
-function novaOS(){
+async function novaOS(){
  let c=cliente.value.trim(),p=placa.value.trim().toUpperCase();
  if(!c||!p){alert('Preencha cliente e placa.');return}
+ let fotos=[];
+ if(fotosEntrada.files && fotosEntrada.files.length){
+   if(fotosEntrada.files.length>6){alert('Selecione no máximo 6 fotos.');return}
+   for(const f of fotosEntrada.files){
+     if(f.size>1800000){alert('Cada foto deve ter no máximo 1,8 MB para esta versão.');return}
+     fotos.push(await fileToDataURL(f));
+   }
+ }
+ let assinatura=assinaturaVazia()?'' : signaturePad.toDataURL('image/png');
  data.unshift(normalize({
   id:Date.now(),num:String(Date.now()).slice(-6),cliente:c,fone:fone.value,doc:doc.value,placa:p,veiculo:veiculo.value,km:km.value,comb:comb.value,previsao:previsao.value,
   pagamento:pagamento.value,defeito:defeito.value,avarias:avarias.value,status:'Aguardando',entrada:new Date().toLocaleString('pt-BR'),saida:'',
-  pecas:[],servicos:[],desconto:0,
+  pecas:[],servicos:[],desconto:0,fotos,obsFotos:obsFotos.value,assinatura,
   checklist:{Pneus:cPneu.checked,Estepe:cEstepe.checked,Macaco:cMacaco.checked,Som:cSom.checked,Documento:cDocumento.checked,Triangulo:cTriangulo.checked,'Chave de roda':cChave.checked,'Objetos no veículo':cObjetos.checked}
  }));
- save(); document.querySelectorAll('#entrada input,#entrada textarea').forEach(x=>{if(x.type==='checkbox')x.checked=false;else x.value=''});show('os')
+ save(); document.querySelectorAll('#entrada input,#entrada textarea').forEach(x=>{if(x.type==='checkbox')x.checked=false;else if(x.type!=='file')x.value=''}); fotosEntrada.value=''; limparAssinatura(); show('os')
 }
+function fileToDataURL(file){return new Promise((res,rej)=>{let r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}
 function subtotalItens(arr){return arr.reduce((a,x)=>a+(Number(x.qtd||0)*Number(x.unit||0)),0)}
 function subtotal(o){return subtotalItens(o.pecas)+subtotalItens(o.servicos)}
 function total(o){return Math.max(0,subtotal(o)-Number(o.desconto||0))}
@@ -160,6 +202,10 @@ function renderOS(){
   <button class="danger" onclick="excluirOS(${o.id})">Excluir</button>
  </div>
  <div class="details hide">
+  <div class="print-header">
+    <img src="logo-vinicar.jpeg" alt="Vinicar Auto Center">
+    <div><div class="os-print-title">ORDEM DE SERVIÇO #${o.num}</div><div class="company-meta"><b>Vinicar Auto Center</b><br>CNPJ 66.940.341/0001-55<br>Seu carro, nossa paixão</div></div>
+  </div>
   <hr><div class="row"><div><b>Telefone:</b> ${o.fone||'—'}</div><div><b>CPF/CNPJ:</b> ${o.doc||'—'}</div></div>
   <div class="row"><div><b>KM:</b> ${o.km||'—'}</div><div><b>Combustível:</b> ${o.comb||'—'}</div></div>
   <p><b>Avarias/observações:</b><br>${o.avarias||'—'}</p>
@@ -167,9 +213,23 @@ function renderOS(){
   <h3>Peças</h3>${renderItens(o.pecas,o.id,'pecas')}
   <h3>Mão de obra</h3>${renderItens(o.servicos,o.id,'servicos')}
   <p><b>Subtotal:</b> ${money(subtotal(o))}<br><b>Desconto:</b> ${money(o.desconto||0)}<br><b>Total:</b> ${money(total(o))}</p>
+
+  ${o.fotos&&o.fotos.length?`<h3>Fotos da entrada</h3><div class="photo-grid">${o.fotos.map(src=>`<img src="${src}" alt="Foto do veículo">`).join('')}</div><p class="muted">${o.obsFotos||''}</p>`:''}
+  ${o.assinatura?`<h3>Assinatura do cliente</h3><div style="max-width:420px;border-top:1px solid #999;padding-top:8px"><img src="${o.assinatura}" alt="Assinatura do cliente" style="width:100%;max-height:140px;object-fit:contain"></div>`:''}
  </div>
  </div>`).join(''):'Nenhuma OS encontrada.';
 }
+
+const signaturePad=document.getElementById('signaturePad');
+const sctx=signaturePad.getContext('2d'); let drawing=false; let signed=false;
+function sigPos(e){let r=signaturePad.getBoundingClientRect();let t=e.touches?e.touches[0]:e;return {x:(t.clientX-r.left)*(signaturePad.width/r.width),y:(t.clientY-r.top)*(signaturePad.height/r.height)}}
+function sigStart(e){drawing=true;signed=true;let p=sigPos(e);sctx.beginPath();sctx.moveTo(p.x,p.y);e.preventDefault()}
+function sigMove(e){if(!drawing)return;let p=sigPos(e);sctx.lineWidth=3;sctx.lineCap='round';sctx.strokeStyle='#111';sctx.lineTo(p.x,p.y);sctx.stroke();e.preventDefault()}
+function sigEnd(){drawing=false}
+signaturePad.addEventListener('mousedown',sigStart);signaturePad.addEventListener('mousemove',sigMove);window.addEventListener('mouseup',sigEnd);
+signaturePad.addEventListener('touchstart',sigStart,{passive:false});signaturePad.addEventListener('touchmove',sigMove,{passive:false});signaturePad.addEventListener('touchend',sigEnd);
+function limparAssinatura(){sctx.clearRect(0,0,signaturePad.width,signaturePad.height);signed=false}
+function assinaturaVazia(){return !signed}
 function render(){
  sOficina.textContent=data.filter(o=>o.status!=='Entregue').length;
  sServico.textContent=data.filter(o=>o.status==='Em serviço').length;
