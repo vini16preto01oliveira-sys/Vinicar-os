@@ -4,28 +4,35 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vinicar Auto Center - OS</title>
 <style>
-:root{--red:#d71920;--dark:#181818;--gray:#666;--light:#f4f4f4}
+:root{--red:#d71920;--dark:#181818;--gray:#666;--light:#f4f4f4;--green:#1b8f4d}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eee;color:#222}
-header{background:#181818;color:white;padding:18px 22px;border-bottom:4px solid var(--red)}
+header{background:#181818;color:white;padding:14px 22px;border-bottom:4px solid var(--red);display:flex;align-items:center;gap:16px}header img{width:145px;max-height:90px;object-fit:contain;background:#fff;border-radius:8px;padding:4px}.brand-text{min-width:0}
 header b{font-size:22px} header span{color:#ddd}
-nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:#fff;position:sticky;top:0}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:#fff;position:sticky;top:0;z-index:5}
 button{border:0;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer}
-nav button,.primary{background:var(--red);color:#fff}.secondary{background:#333;color:#fff}
-main{max-width:1100px;margin:auto;padding:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+nav button,.primary{background:var(--red);color:#fff}.secondary{background:#333;color:#fff}.success{background:var(--green);color:#fff}.danger{background:#8f1117;color:#fff}
+main{max-width:1180px;margin:auto;padding:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px #0001;margin-bottom:14px}
-.stat b{font-size:28px;color:var(--red)}h2{margin-top:0}
+.stat b{font-size:28px;color:var(--red)}h2,h3{margin-top:0}
 label{display:block;font-size:13px;font-weight:bold;margin:8px 0 4px}
-input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:7px}
-.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.three{grid-template-columns:repeat(3,1fr)}
-table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #ddd;text-align:left;font-size:14px}
-.badge{padding:5px 8px;border-radius:15px;background:#eee}.hide{display:none}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-@media(max-width:700px){.grid,.row,.three{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}table{font-size:12px}}
-@media(max-width:460px){.row,.three{grid-template-columns:1fr}}
-@media print{nav,.no-print{display:none}body{background:white}.card{box-shadow:none}}
+input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:7px;background:#fff}
+textarea{min-height:76px}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.three{grid-template-columns:repeat(3,1fr)}.four{grid-template-columns:repeat(4,1fr)}
+table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #ddd;text-align:left;font-size:14px;vertical-align:top}
+.badge{padding:5px 8px;border-radius:15px;background:#eee;display:inline-block}.hide{display:none}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.muted{color:#777;font-size:13px}.money{font-size:22px;font-weight:bold;color:var(--red)}
+.checks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.check{background:#f7f7f7;padding:8px;border-radius:7px}.check input{width:auto;margin-right:6px}
+.os-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.os-head h3{margin:0}
+.itemline{display:grid;grid-template-columns:2fr .7fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px}
+.itemline button{padding:10px}
+.summary{background:#fafafa;border:1px solid #eee;padding:12px;border-radius:8px}
+hr{border:0;border-top:1px solid #eee;margin:16px 0}
+@media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.row,.three,.four{grid-template-columns:1fr 1fr}.checks{grid-template-columns:1fr 1fr}.itemline{grid-template-columns:1fr 1fr}.itemline>*:first-child{grid-column:1/-1}}
+@media(max-width:460px){.row,.three,.four,.checks{grid-template-columns:1fr}}
+@media print{header img{width:120px!important}nav,.no-print{display:none!important}body{background:white}header{background:white;color:#111;border-bottom:2px solid #111}.card{box-shadow:none;border:0;padding:0}.os-card:not(.print-target){display:none}.print-target{display:block}.print-target .details{display:block!important}}
 </style>
 </head>
 <body>
-<header><b>VINICAR <span>AUTO CENTER</span></b><div>Seu carro, nossa paixão • Sistema de Ordem de Serviço</div></header>
+<header><img src="logo-vinicar.jpeg" alt="Vinicar Auto Center"><div class="brand-text"><b>VINICAR <span>AUTO CENTER</span></b><div>Seu carro, nossa paixão • Sistema de Ordem de Serviço</div></div></header>
 <nav>
 <button onclick="show('painel')">Painel</button><button onclick="show('entrada')">Entrada</button>
 <button onclick="show('os')">Ordens de Serviço</button><button onclick="show('clientes')">Clientes</button>
@@ -43,10 +50,21 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 
 <section id="entrada" class="hide"><div class="card"><h2>Entrada de veículo / Nova OS</h2>
 <div class="row"><div><label>Cliente</label><input id="cliente"></div><div><label>WhatsApp</label><input id="fone"></div></div>
-<div class="three row"><div><label>Placa</label><input id="placa"></div><div><label>Veículo</label><input id="veiculo"></div><div><label>KM</label><input id="km" type="number"></div></div>
-<div class="row"><div><label>Combustível</label><select id="comb"><option>Reserva</option><option>1/4</option><option>1/2</option><option>3/4</option><option>Cheio</option></select></div><div><label>Previsão</label><input id="previsao" type="date"></div></div>
+<div class="four row"><div><label>CPF/CNPJ</label><input id="doc"></div><div><label>Placa</label><input id="placa"></div><div><label>Veículo</label><input id="veiculo"></div><div><label>KM</label><input id="km" type="number"></div></div>
+<div class="three row"><div><label>Combustível</label><select id="comb"><option>Reserva</option><option>1/4</option><option>1/2</option><option>3/4</option><option>Cheio</option></select></div><div><label>Previsão</label><input id="previsao" type="date"></div><div><label>Forma de pagamento</label><select id="pagamento"><option>Não informado</option><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option></select></div></div>
 <label>Defeito / serviço solicitado</label><textarea id="defeito"></textarea>
 <label>Avarias / observações de entrada</label><textarea id="avarias"></textarea>
+<h3>Checklist de entrada</h3>
+<div class="checks">
+<label class="check"><input type="checkbox" id="cPneu"> Pneus</label>
+<label class="check"><input type="checkbox" id="cEstepe"> Estepe</label>
+<label class="check"><input type="checkbox" id="cMacaco"> Macaco</label>
+<label class="check"><input type="checkbox" id="cSom"> Som</label>
+<label class="check"><input type="checkbox" id="cDocumento"> Documento</label>
+<label class="check"><input type="checkbox" id="cTriangulo"> Triângulo</label>
+<label class="check"><input type="checkbox" id="cChave"> Chave de roda</label>
+<label class="check"><input type="checkbox" id="cObjetos"> Objetos no veículo</label>
+</div>
 <div class="actions"><button class="primary" onclick="novaOS()">Registrar entrada e abrir OS</button></div>
 </div></section>
 
@@ -56,43 +74,100 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px so
 
 <section id="clientes" class="hide"><div class="card"><h2>Clientes e veículos</h2><div id="listaClientes"></div></div></section>
 </main>
+
 <script>
-let data=JSON.parse(localStorage.getItem('vinicar_os_v2')||'[]');
+let data=JSON.parse(localStorage.getItem('vinicar_os_v2')||'[]').map(normalize);
+function normalize(o){
+  o.pecas=o.pecas||[]; o.servicos=o.servicos||[];
+  o.desconto=Number(o.desconto||0); o.pagamento=o.pagamento||'Não informado';
+  o.checklist=o.checklist||{}; o.doc=o.doc||''; o.saida=o.saida||'';
+  o.pecas=o.pecas.map(x=>({desc:x.desc||'',qtd:Number(x.qtd||1),unit:Number(x.unit||x.valor||0)}));
+  o.servicos=o.servicos.map(x=>({desc:x.desc||'',qtd:Number(x.qtd||1),unit:Number(x.unit||x.valor||0)}));
+  return o
+}
 const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 function save(){localStorage.setItem('vinicar_os_v2',JSON.stringify(data));render()}
 function show(id){document.querySelectorAll('main>section').forEach(x=>x.classList.add('hide'));document.getElementById(id).classList.remove('hide');render()}
 function novaOS(){
  let c=cliente.value.trim(),p=placa.value.trim().toUpperCase();
  if(!c||!p){alert('Preencha cliente e placa.');return}
- data.unshift({id:Date.now(),num:String(Date.now()).slice(-6),cliente:c,fone:fone.value,placa:p,veiculo:veiculo.value,km:km.value,comb:comb.value,previsao:previsao.value,defeito:defeito.value,avarias:avarias.value,status:'Aguardando',entrada:new Date().toLocaleString('pt-BR'),saida:'',pecas:[],servicos:[]});
- save(); document.querySelectorAll('#entrada input,#entrada textarea').forEach(x=>x.value='');show('os')
+ data.unshift(normalize({
+  id:Date.now(),num:String(Date.now()).slice(-6),cliente:c,fone:fone.value,doc:doc.value,placa:p,veiculo:veiculo.value,km:km.value,comb:comb.value,previsao:previsao.value,
+  pagamento:pagamento.value,defeito:defeito.value,avarias:avarias.value,status:'Aguardando',entrada:new Date().toLocaleString('pt-BR'),saida:'',
+  pecas:[],servicos:[],desconto:0,
+  checklist:{Pneus:cPneu.checked,Estepe:cEstepe.checked,Macaco:cMacaco.checked,Som:cSom.checked,Documento:cDocumento.checked,Triangulo:cTriangulo.checked,'Chave de roda':cChave.checked,'Objetos no veículo':cObjetos.checked}
+ }));
+ save(); document.querySelectorAll('#entrada input,#entrada textarea').forEach(x=>{if(x.type==='checkbox')x.checked=false;else x.value=''});show('os')
 }
-function total(o){return [...o.pecas,...o.servicos].reduce((a,x)=>a+Number(x.valor||0),0)}
+function subtotalItens(arr){return arr.reduce((a,x)=>a+(Number(x.qtd||0)*Number(x.unit||0)),0)}
+function subtotal(o){return subtotalItens(o.pecas)+subtotalItens(o.servicos)}
+function total(o){return Math.max(0,subtotal(o)-Number(o.desconto||0))}
 function addItem(id,tipo){
  let desc=prompt(tipo==='pecas'?'Descrição da peça:':'Descrição da mão de obra:'); if(!desc)return;
- let valor=prompt('Valor em R$ (ex.: 150,00):','0'); valor=Number(String(valor).replace('.','').replace(',','.'))||0;
- let o=data.find(x=>x.id===id);o[tipo].push({desc,valor});save()
+ let qtd=Number((prompt('Quantidade:','1')||'1').replace(',','.'))||1;
+ let unit=Number(String(prompt('Valor unitário em R$ (ex.: 150,00):','0')||'0').replace('.','').replace(',','.'))||0;
+ let o=data.find(x=>x.id===id);o[tipo].push({desc,qtd,unit});save()
 }
+function removeItem(id,tipo,i){let o=data.find(x=>x.id===id);o[tipo].splice(i,1);save()}
 function statusOS(id){
  let o=data.find(x=>x.id===id);let opts=['Aguardando','Em serviço','Aguardando peças','Pronto','Entregue'];
  let s=prompt('Novo status:\\n'+opts.join(' | '),o.status);if(!s)return;
  o.status=s;if(s.toLowerCase()==='entregue'&&!o.saida)o.saida=new Date().toLocaleString('pt-BR');save()
 }
+function editarOS(id){
+ let o=data.find(x=>x.id===id);
+ let clienteN=prompt('Cliente:',o.cliente); if(clienteN===null)return;
+ let foneN=prompt('WhatsApp:',o.fone||''); if(foneN===null)return;
+ let veiculoN=prompt('Veículo:',o.veiculo||''); if(veiculoN===null)return;
+ let placaN=prompt('Placa:',o.placa||''); if(placaN===null)return;
+ let defeitoN=prompt('Defeito / serviço solicitado:',o.defeito||''); if(defeitoN===null)return;
+ let pagamentoN=prompt('Forma de pagamento:',o.pagamento||'Não informado'); if(pagamentoN===null)return;
+ let descontoN=prompt('Desconto em R$:',String(o.desconto||0).replace('.',',')); if(descontoN===null)return;
+ o.cliente=clienteN;o.fone=foneN;o.veiculo=veiculoN;o.placa=placaN.toUpperCase();o.defeito=defeitoN;o.pagamento=pagamentoN;o.desconto=Number(String(descontoN).replace('.','').replace(',','.'))||0;save()
+}
+function excluirOS(id){if(confirm('Excluir esta OS definitivamente?')){data=data.filter(x=>x.id!==id);save()}}
 function whatsapp(id){
  let o=data.find(x=>x.id===id);let tel=(o.fone||'').replace(/\D/g,'');if(tel&&!tel.startsWith('55'))tel='55'+tel;
- let msg=`Vinicar Auto Center%0AOS ${o.num}%0A${o.veiculo} - ${o.placa}%0AStatus: ${o.status}%0ATotal: ${encodeURIComponent(money(total(o)))}`;
+ let msg=`Vinicar Auto Center%0AOS ${o.num}%0ACliente: ${encodeURIComponent(o.cliente)}%0A${encodeURIComponent(o.veiculo||'Veículo')} - ${encodeURIComponent(o.placa)}%0AStatus: ${encodeURIComponent(o.status)}%0ATotal: ${encodeURIComponent(money(total(o)))}`;
  window.open(`https://wa.me/${tel}?text=${msg}`,'_blank')
+}
+function imprimir(id){
+ document.querySelectorAll('.os-card').forEach(x=>x.classList.remove('print-target'));
+ let el=document.getElementById('os-'+id); el.classList.add('print-target'); el.querySelector('.details').classList.remove('hide'); window.print()
+}
+function toggleDetails(id){document.querySelector('#os-'+id+' .details').classList.toggle('hide')}
+function renderItens(arr,id,tipo){
+ if(!arr.length)return '—';
+ return `<table><tr><th>Descrição</th><th>Qtd</th><th>Unit.</th><th>Total</th><th class="no-print"></th></tr>`+
+ arr.map((x,i)=>`<tr><td>${x.desc}</td><td>${x.qtd}</td><td>${money(x.unit)}</td><td>${money(x.qtd*x.unit)}</td><td class="no-print"><button class="danger" onclick="removeItem(${id},'${tipo}',${i})">X</button></td></tr>`).join('')+`</table>`
 }
 function renderOS(){
  let q=(document.getElementById('busca')?.value||'').toLowerCase();
  let arr=data.filter(o=>[o.num,o.cliente,o.placa,o.veiculo].join(' ').toLowerCase().includes(q));
- listaOS.innerHTML=arr.length?arr.map(o=>`<div class="card">
- <b>OS #${o.num}</b> • <span class="badge">${o.status}</span><br><b>${o.cliente}</b> — ${o.veiculo||'Veículo'} • ${o.placa}<br>
- <small>Entrada: ${o.entrada}${o.saida?' • Saída: '+o.saida:''}</small><p>${o.defeito||''}</p>
- <b>Peças</b>: ${o.pecas.map(x=>x.desc+' ('+money(x.valor)+')').join(', ')||'—'}<br>
- <b>Mão de obra</b>: ${o.servicos.map(x=>x.desc+' ('+money(x.valor)+')').join(', ')||'—'}<br>
- <h3>Total: ${money(total(o))}</h3>
- <div class="actions no-print"><button class="secondary" onclick="addItem(${o.id},'pecas')">+ Peça</button><button class="secondary" onclick="addItem(${o.id},'servicos')">+ Mão de obra</button><button class="primary" onclick="statusOS(${o.id})">Alterar status</button><button onclick="whatsapp(${o.id})">WhatsApp</button><button onclick="window.print()">Imprimir/PDF</button></div>
+ listaOS.innerHTML=arr.length?arr.map(o=>`<div class="card os-card" id="os-${o.id}">
+ <div class="os-head"><div><h3>OS #${o.num}</h3><b>${o.cliente}</b> — ${o.veiculo||'Veículo'} • ${o.placa}</div><div><span class="badge">${o.status}</span></div></div>
+ <div class="muted">Entrada: ${o.entrada}${o.saida?' • Saída: '+o.saida:''}</div>
+ <p>${o.defeito||''}</p>
+ <div class="summary"><b>Total da OS:</b> <span class="money">${money(total(o))}</span><br><span class="muted">Pagamento: ${o.pagamento||'Não informado'} • Desconto: ${money(o.desconto||0)}</span></div>
+ <div class="actions no-print">
+  <button class="secondary" onclick="toggleDetails(${o.id})">Ver detalhes</button>
+  <button class="secondary" onclick="addItem(${o.id},'pecas')">+ Peça</button>
+  <button class="secondary" onclick="addItem(${o.id},'servicos')">+ Mão de obra</button>
+  <button class="primary" onclick="statusOS(${o.id})">Alterar status</button>
+  <button onclick="editarOS(${o.id})">Editar OS</button>
+  <button class="success" onclick="whatsapp(${o.id})">WhatsApp</button>
+  <button onclick="imprimir(${o.id})">Imprimir/PDF</button>
+  <button class="danger" onclick="excluirOS(${o.id})">Excluir</button>
+ </div>
+ <div class="details hide">
+  <hr><div class="row"><div><b>Telefone:</b> ${o.fone||'—'}</div><div><b>CPF/CNPJ:</b> ${o.doc||'—'}</div></div>
+  <div class="row"><div><b>KM:</b> ${o.km||'—'}</div><div><b>Combustível:</b> ${o.comb||'—'}</div></div>
+  <p><b>Avarias/observações:</b><br>${o.avarias||'—'}</p>
+  <p><b>Checklist:</b><br>${Object.entries(o.checklist||{}).map(([k,v])=>`${v?'✓':'✗'} ${k}`).join(' • ')||'—'}</p>
+  <h3>Peças</h3>${renderItens(o.pecas,o.id,'pecas')}
+  <h3>Mão de obra</h3>${renderItens(o.servicos,o.id,'servicos')}
+  <p><b>Subtotal:</b> ${money(subtotal(o))}<br><b>Desconto:</b> ${money(o.desconto||0)}<br><b>Total:</b> ${money(total(o))}</p>
+ </div>
  </div>`).join(''):'Nenhuma OS encontrada.';
 }
 function render(){
@@ -100,8 +175,8 @@ function render(){
  sServico.textContent=data.filter(o=>o.status==='Em serviço').length;
  sPronto.textContent=data.filter(o=>o.status==='Pronto').length;
  sEntregue.textContent=data.filter(o=>o.status==='Entregue').length;
- recentes.innerHTML=data.slice(0,5).map(o=>`<p><b>OS #${o.num}</b> — ${o.placa} — ${o.cliente} — ${o.status}</p>`).join('')||'Nenhuma OS cadastrada.';
- listaClientes.innerHTML=data.length?`<table><tr><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Placa</th></tr>${data.map(o=>`<tr><td>${o.cliente}</td><td>${o.fone||''}</td><td>${o.veiculo||''}</td><td>${o.placa}</td></tr>`).join('')}</table>`:'Nenhum cliente cadastrado.';
+ recentes.innerHTML=data.slice(0,5).map(o=>`<p><b>OS #${o.num}</b> — ${o.placa} — ${o.cliente} — ${o.status} — ${money(total(o))}</p>`).join('')||'Nenhuma OS cadastrada.';
+ listaClientes.innerHTML=data.length?`<table><tr><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Placa</th><th>Última OS</th></tr>${data.map(o=>`<tr><td>${o.cliente}</td><td>${o.fone||''}</td><td>${o.veiculo||''}</td><td>${o.placa}</td><td>#${o.num}</td></tr>`).join('')}</table>`:'Nenhum cliente cadastrado.';
  renderOS()
 }
 render();
