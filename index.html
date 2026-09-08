@@ -47,13 +47,19 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
   .photo-grid img{max-height:180px}
 }
 
+
+#cloudStatus.ok{border-left:5px solid #1b8f4d}
+#cloudStatus.warn{border-left:5px solid #d98b00}
+#cloudStatus.err{border-left:5px solid #b00020}
+#firebaseConfigPaste{min-height:180px;font-family:monospace;font-size:12px}
+
 </style>
 </head>
 <body>
 <header><img src="logo-vinicar.jpeg" alt="Vinicar Auto Center"><div class="brand-text"><b>VINICAR <span>AUTO CENTER</span></b><div>Seu carro, nossa paixão • Sistema de Ordem de Serviço</div></div></header>
 <nav>
 <button onclick="show('painel')">Painel</button><button onclick="show('entrada')">Entrada</button>
-<button onclick="show('os')">Ordens de Serviço</button><button onclick="show('clientes')">Clientes</button><button onclick="show('caixa')">Caixa</button><button onclick="show('pendentes')">Pagamentos Pendentes</button>
+<button onclick="show('os')">Ordens de Serviço</button><button onclick="show('clientes')">Clientes</button><button onclick="show('caixa')">Caixa</button><button onclick="show('pendentes')">Pagamentos Pendentes</button><button onclick="show('nuvem')">Nuvem</button>
 </nav>
 <main>
 <section id="painel">
@@ -105,7 +111,51 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 <div id="listaOS"></div></div></section>
 
 <section id="clientes" class="hide"><div class="card"><h2>Clientes e veículos</h2><div id="listaClientes"></div></div></section>
-<section id="caixa" class="hide"><div class="grid"><div class="card stat">Entradas<br><b id="cxEntradas">R$ 0,00</b></div><div class="card stat">Saídas<br><b id="cxSaidas">R$ 0,00</b></div><div class="card stat">Saldo<br><b id="cxSaldo">R$ 0,00</b></div><div class="card stat">Pendentes<br><b id="cxPendentes">R$ 0,00</b></div></div><div class="card"><h2>Entrada e saída de caixa</h2><div class="four row"><div><label>Tipo</label><select id="movTipo"><option>Entrada</option><option>Saída</option></select></div><div><label>Descrição</label><input id="movDesc"></div><div><label>Valor</label><input id="movValor" type="number" step="0.01"></div><div><label>Forma de pagamento</label><select id="movForma"><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option><option>Outro</option></select></div></div><div class="actions"><button class="primary" onclick="addMov()">Registrar movimento</button></div><hr><div id="listaCaixa"></div></div></section><section id="pendentes" class="hide"><div class="card"><h2>Pagamentos Pendentes</h2><div class="row"><div><label>Cliente</label><input id="penCliente"></div><div><label>Referência / OS</label><input id="penRef"></div></div><div class="three row"><div><label>Valor pendente</label><input id="penValor" type="number" step="0.01"></div><div><label>Vencimento</label><input id="penVenc" type="date"></div><div><label>Observação</label><input id="penObs"></div></div><div class="actions"><button class="primary" onclick="addPendente()">Adicionar pendência</button></div><hr><div id="listaPendentes"></div></div></section></main>
+<section id="caixa" class="hide"><div class="grid"><div class="card stat">Entradas<br><b id="cxEntradas">R$ 0,00</b></div><div class="card stat">Saídas<br><b id="cxSaidas">R$ 0,00</b></div><div class="card stat">Saldo<br><b id="cxSaldo">R$ 0,00</b></div><div class="card stat">Pendentes<br><b id="cxPendentes">R$ 0,00</b></div></div><div class="card"><h2>Entrada e saída de caixa</h2><div class="four row"><div><label>Tipo</label><select id="movTipo"><option>Entrada</option><option>Saída</option></select></div><div><label>Descrição</label><input id="movDesc"></div><div><label>Valor</label><input id="movValor" type="number" step="0.01"></div><div><label>Forma de pagamento</label><select id="movForma"><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option><option>Outro</option></select></div></div><div class="actions"><button class="primary" onclick="addMov()">Registrar movimento</button></div><hr><div id="listaCaixa"></div></div></section><section id="pendentes" class="hide"><div class="card"><h2>Pagamentos Pendentes</h2><div class="row"><div><label>Cliente</label><input id="penCliente"></div><div><label>Referência / OS</label><input id="penRef"></div></div><div class="three row"><div><label>Valor pendente</label><input id="penValor" type="number" step="0.01"></div><div><label>Vencimento</label><input id="penVenc" type="date"></div><div><label>Observação</label><input id="penObs"></div></div><div class="actions"><button class="primary" onclick="addPendente()">Adicionar pendência</button></div><hr><div id="listaPendentes"></div></div></section>
+<section id="nuvem" class="hide">
+  <div class="card">
+    <h2>☁️ Backup e sincronização na nuvem</h2>
+    <p class="muted">Conecte o Firebase uma vez. Depois, use o mesmo e-mail e senha no Safari, no ícone da Tela de Início e em outros aparelhos.</p>
+    <div id="cloudStatus" class="summary"><b>Status:</b> ainda não conectado.</div>
+
+    <h3 style="margin-top:18px">1. Configuração do Firebase</h3>
+    <p class="muted">Cole abaixo o bloco <b>firebaseConfig</b> que o Firebase mostrar para o aplicativo Web.</p>
+    <textarea id="firebaseConfigPaste" placeholder='const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};'></textarea>
+    <div class="actions">
+      <button class="primary" onclick="salvarFirebaseConfig()">Salvar configuração</button>
+      <button class="danger" onclick="apagarFirebaseConfig()">Apagar configuração</button>
+    </div>
+
+    <hr>
+    <h3>2. Login da oficina</h3>
+    <div class="row">
+      <div><label>E-mail</label><input id="cloudEmail" type="email" autocomplete="username"></div>
+      <div><label>Senha</label><input id="cloudPassword" type="password" autocomplete="current-password"></div>
+    </div>
+    <div class="actions">
+      <button class="primary" onclick="cloudEntrar()">Entrar</button>
+      <button class="secondary" onclick="cloudCriarConta()">Criar conta</button>
+      <button onclick="cloudSair()">Sair</button>
+    </div>
+
+    <hr>
+    <h3>3. Dados</h3>
+    <div class="actions">
+      <button class="success" onclick="cloudEnviarLocal()">Enviar dados deste aparelho para a nuvem</button>
+      <button class="secondary" onclick="cloudBaixar()">Baixar dados da nuvem para este aparelho</button>
+    </div>
+    <p class="muted"><b>Importante:</b> faça o primeiro envio pelo navegador/aparelho onde as OS antigas ainda aparecem. Depois, entre com o mesmo login nos outros aparelhos.</p>
+  </div>
+</section>
+
+</main>
 
 <script>
 let data=JSON.parse(localStorage.getItem('vinicar_os_v2')||'[]').map(normalize);
@@ -118,7 +168,7 @@ function normalize(o){
   return o
 }
 const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-function save(){localStorage.setItem('vinicar_os_v2',JSON.stringify(data));render()}
+function save(){localStorage.setItem('vinicar_os_v2',JSON.stringify(data));render();if(window.vinicarCloudAutoSave)window.vinicarCloudAutoSave()}
 function show(id){document.querySelectorAll('main>section').forEach(x=>x.classList.add('hide'));document.getElementById(id).classList.remove('hide');render()}
 async function novaOS(){
  let c=cliente.value.trim(),p=placa.value.trim().toUpperCase();
@@ -231,7 +281,7 @@ signaturePad.addEventListener('touchstart',sigStart,{passive:false});signaturePa
 function limparAssinatura(){sctx.clearRect(0,0,signaturePad.width,signaturePad.height);signed=false}
 function assinaturaVazia(){return !signed}
 let caixa=JSON.parse(localStorage.getItem('vinicar_caixa_v1')||'[]');let pendentes=JSON.parse(localStorage.getItem('vinicar_pendentes_v1')||'[]');
-function saveFin(){localStorage.setItem('vinicar_caixa_v1',JSON.stringify(caixa));localStorage.setItem('vinicar_pendentes_v1',JSON.stringify(pendentes));renderFin()}
+function saveFin(){localStorage.setItem('vinicar_caixa_v1',JSON.stringify(caixa));localStorage.setItem('vinicar_pendentes_v1',JSON.stringify(pendentes));renderFin();if(window.vinicarCloudAutoSave)window.vinicarCloudAutoSave()}
 function addMov(){let d=movDesc.value.trim(),v=Number(movValor.value||0);if(!d||v<=0){alert('Preencha descrição e valor.');return}caixa.unshift({id:Date.now(),tipo:movTipo.value,desc:d,valor:v,forma:movForma.value,data:new Date().toLocaleString('pt-BR')});movDesc.value='';movValor.value='';saveFin()}
 function delMov(id){if(confirm('Excluir este movimento?')){caixa=caixa.filter(x=>x.id!==id);saveFin()}}
 function addPendente(){let c=penCliente.value.trim(),v=Number(penValor.value||0);if(!c||v<=0){alert('Preencha cliente e valor.');return}pendentes.unshift({id:Date.now(),cliente:c,ref:penRef.value,valor:v,venc:penVenc.value,obs:penObs.value,status:'Pendente'});penCliente.value='';penRef.value='';penValor.value='';penVenc.value='';penObs.value='';saveFin()}
@@ -249,4 +299,163 @@ function render(){
 }
 render();
 </script>
+
+<script type="module">
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadString, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
+
+let fbApp=null, auth=null, db=null, storage=null, currentUser=null, syncing=false;
+const CONFIG_KEY='vinicar_firebase_config_v1';
+const $=id=>document.getElementById(id);
+
+function status(msg,kind='warn'){
+  const e=$('cloudStatus'); if(!e)return;
+  e.className='summary '+kind; e.innerHTML='<b>Status:</b> '+msg;
+}
+function extractConfig(txt){
+  const keys=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
+  const cfg={};
+  for(const k of keys){
+    const m=txt.match(new RegExp(k+"\\s*:\\s*['\\\"]([^'\\\"]+)['\\\"]"));
+    if(m)cfg[k]=m[1];
+  }
+  if(!cfg.apiKey||!cfg.projectId||!cfg.appId) throw new Error('Não encontrei apiKey, projectId e appId no texto colado.');
+  return cfg;
+}
+async function initCloud(){
+  const raw=localStorage.getItem(CONFIG_KEY);
+  if(!raw){ status('Firebase ainda não configurado.','warn'); return; }
+  try{
+    const cfg=JSON.parse(raw);
+    if(fbApp){ try{await deleteApp(fbApp)}catch{} }
+    fbApp=initializeApp(cfg,'vinicar-'+Date.now());
+    auth=getAuth(fbApp); db=getFirestore(fbApp); storage=getStorage(fbApp);
+    onAuthStateChanged(auth, async user=>{
+      currentUser=user;
+      if(user){
+        status('Conectado como '+user.email+'. Sincronização automática ativada.','ok');
+        window.vinicarCloudAutoSave=debouncedAutoSave;
+        const snap=await getDoc(doc(db,'users',user.uid,'vinicar','state'));
+        if(snap.exists()) await applyCloudState(snap.data(), false);
+      } else {
+        status('Firebase configurado. Faça login para sincronizar.','warn');
+        window.vinicarCloudAutoSave=null;
+      }
+    });
+  }catch(e){ status('Erro ao iniciar Firebase: '+e.message,'err'); }
+}
+window.salvarFirebaseConfig=async function(){
+  try{
+    const cfg=extractConfig($('firebaseConfigPaste').value);
+    localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));
+    status('Configuração salva. Inicializando...','warn');
+    await initCloud();
+  }catch(e){alert(e.message)}
+}
+window.apagarFirebaseConfig=async function(){
+  if(!confirm('Apagar a configuração do Firebase deste aparelho?'))return;
+  localStorage.removeItem(CONFIG_KEY); window.vinicarCloudAutoSave=null;
+  if(auth)try{await signOut(auth)}catch{}
+  status('Configuração apagada deste aparelho.','warn');
+}
+window.cloudEntrar=async function(){
+  if(!auth){alert('Salve primeiro a configuração do Firebase.');return}
+  try{await signInWithEmailAndPassword(auth,$('cloudEmail').value.trim(),$('cloudPassword').value)}
+  catch(e){alert('Não foi possível entrar: '+traduzErro(e.code))}
+}
+window.cloudCriarConta=async function(){
+  if(!auth){alert('Salve primeiro a configuração do Firebase.');return}
+  try{await createUserWithEmailAndPassword(auth,$('cloudEmail').value.trim(),$('cloudPassword').value);alert('Conta criada e conectada.')}
+  catch(e){alert('Não foi possível criar a conta: '+traduzErro(e.code))}
+}
+window.cloudSair=async function(){if(auth)await signOut(auth)}
+function traduzErro(code){
+  const m={
+    'auth/invalid-credential':'e-mail ou senha incorretos.',
+    'auth/email-already-in-use':'este e-mail já está cadastrado.',
+    'auth/weak-password':'a senha precisa ter pelo menos 6 caracteres.',
+    'auth/invalid-email':'e-mail inválido.',
+    'auth/operation-not-allowed':'ative E-mail/Senha no Firebase Authentication.'
+  };return m[code]||code||'erro desconhecido.'
+}
+async function uploadAssetIfNeeded(value,path){
+  if(!value||typeof value!=='string'||!value.startsWith('data:')) return value||'';
+  const r=ref(storage,path);
+  await uploadString(r,value,'data_url');
+  return await getDownloadURL(r);
+}
+async function prepareForCloud(){
+  const orders=[];
+  for(const o of data){
+    const c=JSON.parse(JSON.stringify(o));
+    if(c.fotos&&c.fotos.length){
+      const arr=[];
+      for(let i=0;i<c.fotos.length;i++){
+        arr.push(await uploadAssetIfNeeded(c.fotos[i],`users/${currentUser.uid}/os/${c.id}/foto-${i}`));
+      }
+      c.fotos=arr;
+    }
+    if(c.assinatura){
+      c.assinatura=await uploadAssetIfNeeded(c.assinatura,`users/${currentUser.uid}/os/${c.id}/assinatura.png`);
+    }
+    orders.push(c);
+  }
+  return {orders,caixa:JSON.parse(JSON.stringify(caixa||[])),pendentes:JSON.parse(JSON.stringify(pendentes||[]))};
+}
+async function pushCloud(showAlert=true){
+  if(!currentUser||!db||syncing)return;
+  syncing=true;
+  try{
+    status('Enviando dados para a nuvem...','warn');
+    const payload=await prepareForCloud();
+    await setDoc(doc(db,'users',currentUser.uid,'vinicar','state'),{
+      ...payload, updatedAt:serverTimestamp(), version:1
+    },{merge:false});
+    // Replace local base64 assets with cloud URLs too, reducing storage pressure.
+    data=payload.orders;
+    localStorage.setItem('vinicar_os_v2',JSON.stringify(data));
+    render();
+    status('Tudo salvo na nuvem.','ok');
+    if(showAlert)alert('Dados enviados para a nuvem com sucesso.');
+  }catch(e){
+    console.error(e); status('Falha ao salvar: '+e.message,'err');
+    if(showAlert)alert('Falha ao enviar: '+e.message);
+  }finally{syncing=false}
+}
+window.cloudEnviarLocal=()=>pushCloud(true);
+window.cloudBaixar=async function(){
+  if(!currentUser||!db){alert('Faça login primeiro.');return}
+  const snap=await getDoc(doc(db,'users',currentUser.uid,'vinicar','state'));
+  if(!snap.exists()){alert('Ainda não há dados salvos na nuvem.');return}
+  if(confirm('Substituir os dados deste aparelho pelos dados da nuvem?'))await applyCloudState(snap.data(),true);
+}
+async function applyCloudState(s,showAlert){
+  if(!s)return;
+  if(Array.isArray(s.orders))data=s.orders.map(normalize);
+  if(Array.isArray(s.caixa))caixa=s.caixa;
+  if(Array.isArray(s.pendentes))pendentes=s.pendentes;
+  localStorage.setItem('vinicar_os_v2',JSON.stringify(data));
+  localStorage.setItem('vinicar_caixa_v1',JSON.stringify(caixa));
+  localStorage.setItem('vinicar_pendentes_v1',JSON.stringify(pendentes));
+  render();renderFin();
+  status('Dados da nuvem carregados neste aparelho.','ok');
+  if(showAlert)alert('Dados da nuvem carregados com sucesso.');
+}
+let t=null;
+function debouncedAutoSave(){
+  if(!currentUser)return;
+  clearTimeout(t); t=setTimeout(()=>pushCloud(false),1200);
+}
+initCloud();
+</script>
+
 </body></html>
