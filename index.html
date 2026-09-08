@@ -115,11 +115,11 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 <section id="nuvem" class="hide">
   <div class="card">
     <h2>☁️ Backup e sincronização na nuvem</h2>
-    <p class="muted">Conecte o Firebase uma vez. Depois, use o mesmo e-mail e senha no Safari, no ícone da Tela de Início e em outros aparelhos.</p>
+    <p class="muted">Firebase já conectado. Use o mesmo e-mail e senha no Safari, no ícone da Tela de Início e em outros aparelhos. Nesta versão, OS, caixa e pendências sincronizam; fotos e assinatura permanecem locais.</p>
     <div id="cloudStatus" class="summary"><b>Status:</b> ainda não conectado.</div>
 
-    <h3 style="margin-top:18px">1. Configuração do Firebase</h3>
-    <p class="muted">Cole abaixo o bloco <b>firebaseConfig</b> que o Firebase mostrar para o aplicativo Web.</p>
+    <h3 style="margin-top:18px">1. Firebase conectado</h3>
+    <p class="muted">Este arquivo já está configurado para o projeto Vinicar Auto Center.</p>
     <textarea id="firebaseConfigPaste" placeholder='const firebaseConfig = {
   apiKey: "...",
   authDomain: "...",
@@ -128,10 +128,7 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
   messagingSenderId: "...",
   appId: "..."
 };'></textarea>
-    <div class="actions">
-      <button class="primary" onclick="salvarFirebaseConfig()">Salvar configuração</button>
-      <button class="danger" onclick="apagarFirebaseConfig()">Apagar configuração</button>
-    </div>
+    <div class="actions"><span class="badge">✓ Configuração pronta</span></div>
 
     <hr>
     <h3>2. Login da oficina</h3>
@@ -301,7 +298,7 @@ render();
 </script>
 
 <script type="module">
-import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
   createUserWithEmailAndPassword, signOut
@@ -309,75 +306,30 @@ import {
 import {
   getFirestore, doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-import {
-  getStorage, ref, uploadString, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 
-let fbApp=null, auth=null, db=null, storage=null, currentUser=null, syncing=false;
-const CONFIG_KEY='vinicar_firebase_config_v1';
+const firebaseConfig = {"apiKey": "AIzaSyCqeUCefF_mHSrOML9q2786_yH5Ark2Yb4", "authDomain": "vinicar-auto-center.firebaseapp.com", "projectId": "vinicar-auto-center", "messagingSenderId": "352676932428", "appId": "1:352676932428:web:a0591f143b47a63764bde9"};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let currentUser=null, syncing=false, timer=null;
 const $=id=>document.getElementById(id);
 
 function status(msg,kind='warn'){
   const e=$('cloudStatus'); if(!e)return;
   e.className='summary '+kind; e.innerHTML='<b>Status:</b> '+msg;
 }
-function extractConfig(txt){
-  const keys=['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'];
-  const cfg={};
-  for(const k of keys){
-    const m=txt.match(new RegExp(k+"\\s*:\\s*['\\\"]([^'\\\"]+)['\\\"]"));
-    if(m)cfg[k]=m[1];
-  }
-  if(!cfg.apiKey||!cfg.projectId||!cfg.appId) throw new Error('Não encontrei apiKey, projectId e appId no texto colado.');
-  return cfg;
+
+// Remove the old manual Firebase-config UI, since this build is already connected.
+const cfgArea=$('firebaseConfigPaste');
+if(cfgArea){
+  const parent=cfgArea.closest('.card');
+  cfgArea.value='Firebase já configurado para Vinicar Auto Center';
+  cfgArea.disabled=true;
 }
-async function initCloud(){
-  const raw=localStorage.getItem(CONFIG_KEY);
-  if(!raw){ status('Firebase ainda não configurado.','warn'); return; }
-  try{
-    const cfg=JSON.parse(raw);
-    if(fbApp){ try{await deleteApp(fbApp)}catch{} }
-    fbApp=initializeApp(cfg,'vinicar-'+Date.now());
-    auth=getAuth(fbApp); db=getFirestore(fbApp); storage=getStorage(fbApp);
-    onAuthStateChanged(auth, async user=>{
-      currentUser=user;
-      if(user){
-        status('Conectado como '+user.email+'. Sincronização automática ativada.','ok');
-        window.vinicarCloudAutoSave=debouncedAutoSave;
-        const snap=await getDoc(doc(db,'users',user.uid,'vinicar','state'));
-        if(snap.exists()) await applyCloudState(snap.data(), false);
-      } else {
-        status('Firebase configurado. Faça login para sincronizar.','warn');
-        window.vinicarCloudAutoSave=null;
-      }
-    });
-  }catch(e){ status('Erro ao iniciar Firebase: '+e.message,'err'); }
-}
-window.salvarFirebaseConfig=async function(){
-  try{
-    const cfg=extractConfig($('firebaseConfigPaste').value);
-    localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));
-    status('Configuração salva. Inicializando...','warn');
-    await initCloud();
-  }catch(e){alert(e.message)}
-}
-window.apagarFirebaseConfig=async function(){
-  if(!confirm('Apagar a configuração do Firebase deste aparelho?'))return;
-  localStorage.removeItem(CONFIG_KEY); window.vinicarCloudAutoSave=null;
-  if(auth)try{await signOut(auth)}catch{}
-  status('Configuração apagada deste aparelho.','warn');
-}
-window.cloudEntrar=async function(){
-  if(!auth){alert('Salve primeiro a configuração do Firebase.');return}
-  try{await signInWithEmailAndPassword(auth,$('cloudEmail').value.trim(),$('cloudPassword').value)}
-  catch(e){alert('Não foi possível entrar: '+traduzErro(e.code))}
-}
-window.cloudCriarConta=async function(){
-  if(!auth){alert('Salve primeiro a configuração do Firebase.');return}
-  try{await createUserWithEmailAndPassword(auth,$('cloudEmail').value.trim(),$('cloudPassword').value);alert('Conta criada e conectada.')}
-  catch(e){alert('Não foi possível criar a conta: '+traduzErro(e.code))}
-}
-window.cloudSair=async function(){if(auth)await signOut(auth)}
+window.salvarFirebaseConfig=()=>alert('Esta versão já está configurada com o Firebase da Vinicar.');
+window.apagarFirebaseConfig=()=>alert('Configuração fixa nesta versão.');
+
 function traduzErro(code){
   const m={
     'auth/invalid-credential':'e-mail ou senha incorretos.',
@@ -385,77 +337,107 @@ function traduzErro(code){
     'auth/weak-password':'a senha precisa ter pelo menos 6 caracteres.',
     'auth/invalid-email':'e-mail inválido.',
     'auth/operation-not-allowed':'ative E-mail/Senha no Firebase Authentication.'
-  };return m[code]||code||'erro desconhecido.'
+  };
+  return m[code]||code||'erro desconhecido.';
 }
-async function uploadAssetIfNeeded(value,path){
-  if(!value||typeof value!=='string'||!value.startsWith('data:')) return value||'';
-  const r=ref(storage,path);
-  await uploadString(r,value,'data_url');
-  return await getDownloadURL(r);
+
+window.cloudEntrar=async function(){
+  try{await signInWithEmailAndPassword(auth,$('cloudEmail').value.trim(),$('cloudPassword').value)}
+  catch(e){alert('Não foi possível entrar: '+traduzErro(e.code))}
 }
-async function prepareForCloud(){
-  const orders=[];
-  for(const o of data){
-    const c=JSON.parse(JSON.stringify(o));
-    if(c.fotos&&c.fotos.length){
-      const arr=[];
-      for(let i=0;i<c.fotos.length;i++){
-        arr.push(await uploadAssetIfNeeded(c.fotos[i],`users/${currentUser.uid}/os/${c.id}/foto-${i}`));
-      }
-      c.fotos=arr;
-    }
-    if(c.assinatura){
-      c.assinatura=await uploadAssetIfNeeded(c.assinatura,`users/${currentUser.uid}/os/${c.id}/assinatura.png`);
-    }
-    orders.push(c);
-  }
-  return {orders,caixa:JSON.parse(JSON.stringify(caixa||[])),pendentes:JSON.parse(JSON.stringify(pendentes||[]))};
+window.cloudCriarConta=async function(){
+  try{
+    await createUserWithEmailAndPassword(auth,$('cloudEmail').value.trim(),$('cloudPassword').value);
+    alert('Conta criada e conectada.');
+  }catch(e){alert('Não foi possível criar a conta: '+traduzErro(e.code))}
 }
+window.cloudSair=async function(){await signOut(auth)}
+
+function stripLocalMedia(order){
+  const c=JSON.parse(JSON.stringify(order));
+  // Fotos e assinatura ficam locais nesta versão; não enviamos ao Firestore.
+  c.fotos=[];
+  c.assinatura='';
+  return c;
+}
+
+function cloudPayload(){
+  return {
+    orders:(data||[]).map(stripLocalMedia),
+    caixa:JSON.parse(JSON.stringify(caixa||[])),
+    pendentes:JSON.parse(JSON.stringify(pendentes||[]))
+  };
+}
+
 async function pushCloud(showAlert=true){
-  if(!currentUser||!db||syncing)return;
+  if(!currentUser||syncing)return;
   syncing=true;
   try{
-    status('Enviando dados para a nuvem...','warn');
-    const payload=await prepareForCloud();
+    status('Salvando OS, caixa e pendências na nuvem...','warn');
+    const payload=cloudPayload();
     await setDoc(doc(db,'users',currentUser.uid,'vinicar','state'),{
-      ...payload, updatedAt:serverTimestamp(), version:1
+      ...payload,updatedAt:serverTimestamp(),version:2
     },{merge:false});
-    // Replace local base64 assets with cloud URLs too, reducing storage pressure.
-    data=payload.orders;
-    localStorage.setItem('vinicar_os_v2',JSON.stringify(data));
-    render();
-    status('Tudo salvo na nuvem.','ok');
-    if(showAlert)alert('Dados enviados para a nuvem com sucesso.');
+    status('Dados sincronizados na nuvem.','ok');
+    if(showAlert)alert('OS, caixa e pagamentos pendentes enviados para a nuvem.');
   }catch(e){
-    console.error(e); status('Falha ao salvar: '+e.message,'err');
+    console.error(e);
+    status('Falha ao salvar: '+e.message,'err');
     if(showAlert)alert('Falha ao enviar: '+e.message);
   }finally{syncing=false}
 }
 window.cloudEnviarLocal=()=>pushCloud(true);
-window.cloudBaixar=async function(){
-  if(!currentUser||!db){alert('Faça login primeiro.');return}
-  const snap=await getDoc(doc(db,'users',currentUser.uid,'vinicar','state'));
-  if(!snap.exists()){alert('Ainda não há dados salvos na nuvem.');return}
-  if(confirm('Substituir os dados deste aparelho pelos dados da nuvem?'))await applyCloudState(snap.data(),true);
+
+function mergeOrdersPreservingLocalMedia(cloudOrders){
+  const localById=new Map((data||[]).map(o=>[String(o.id),o]));
+  return (cloudOrders||[]).map(o=>{
+    const old=localById.get(String(o.id));
+    const merged=normalize(o);
+    if(old){
+      if(Array.isArray(old.fotos) && old.fotos.length) merged.fotos=old.fotos;
+      if(old.assinatura) merged.assinatura=old.assinatura;
+    }
+    return merged;
+  });
 }
+
 async function applyCloudState(s,showAlert){
   if(!s)return;
-  if(Array.isArray(s.orders))data=s.orders.map(normalize);
-  if(Array.isArray(s.caixa))caixa=s.caixa;
-  if(Array.isArray(s.pendentes))pendentes=s.pendentes;
+  if(Array.isArray(s.orders)) data=mergeOrdersPreservingLocalMedia(s.orders);
+  if(Array.isArray(s.caixa)) caixa=s.caixa;
+  if(Array.isArray(s.pendentes)) pendentes=s.pendentes;
   localStorage.setItem('vinicar_os_v2',JSON.stringify(data));
   localStorage.setItem('vinicar_caixa_v1',JSON.stringify(caixa));
   localStorage.setItem('vinicar_pendentes_v1',JSON.stringify(pendentes));
-  render();renderFin();
+  render(); if(typeof renderFin==='function')renderFin();
   status('Dados da nuvem carregados neste aparelho.','ok');
   if(showAlert)alert('Dados da nuvem carregados com sucesso.');
 }
-let t=null;
+
+window.cloudBaixar=async function(){
+  if(!currentUser){alert('Faça login primeiro.');return}
+  const snap=await getDoc(doc(db,'users',currentUser.uid,'vinicar','state'));
+  if(!snap.exists()){alert('Ainda não há dados salvos na nuvem.');return}
+  if(confirm('Carregar OS, caixa e pendências da nuvem neste aparelho?')) await applyCloudState(snap.data(),true);
+}
+
 function debouncedAutoSave(){
   if(!currentUser)return;
-  clearTimeout(t); t=setTimeout(()=>pushCloud(false),1200);
+  clearTimeout(timer);
+  timer=setTimeout(()=>pushCloud(false),1200);
 }
-initCloud();
-</script>
 
+onAuthStateChanged(auth,async user=>{
+  currentUser=user;
+  if(user){
+    window.vinicarCloudAutoSave=debouncedAutoSave;
+    status('Conectado como '+user.email+'. Sincronização automática ativada.','ok');
+    const snap=await getDoc(doc(db,'users',user.uid,'vinicar','state'));
+    if(snap.exists()) await applyCloudState(snap.data(),false);
+  }else{
+    window.vinicarCloudAutoSave=null;
+    status('Firebase configurado. Entre com e-mail e senha para sincronizar.','warn');
+  }
+});
+</script>
 </body></html>

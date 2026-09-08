@@ -1,20 +1,22 @@
-# Vinicar Auto Center - V5 Firebase
+# Vinicar Auto Center - V5 Firestore
 
-Esta versão mantém as funções atuais e adiciona:
-- login por e-mail e senha;
-- sincronização de OS, Caixa e Pagamentos Pendentes;
-- fotos e assinatura armazenadas no Firebase Storage;
-- migração dos dados já existentes no navegador para a nuvem;
-- funcionamento entre Safari, Tela de Início e outros aparelhos com o mesmo login.
+Esta versão já vem configurada para o projeto Firebase "Vinicar auto center".
 
-## Configuração necessária no Firebase
-1. Criar um projeto e registrar um aplicativo Web.
-2. Ativar Authentication > Email/Password.
-3. Criar Cloud Firestore.
-4. Ativar Firebase Storage.
-5. Publicar as regras dos arquivos firestore.rules e storage.rules.
-6. No sistema Vinicar, abrir Nuvem e colar o bloco firebaseConfig.
-7. Criar/entrar com a conta da oficina.
-8. No aparelho onde estão as OS antigas, clicar "Enviar dados deste aparelho para a nuvem".
+Sincroniza na nuvem:
+- Ordens de serviço
+- Caixa
+- Pagamentos pendentes
 
-O projeto usa Firebase Web SDK 12.18.0 via CDN.
+Autenticação:
+- E-mail e senha do Firebase Authentication
+
+Nesta versão não usa Firebase Storage:
+- Fotos e assinatura do responsável continuam salvas localmente no aparelho.
+- Ao baixar dados da nuvem no aparelho original, fotos/assinatura locais existentes são preservadas quando a OS tem o mesmo ID.
+
+Primeiro uso:
+1. Publique index.html e logo-vinicar.jpeg no GitHub.
+2. Abra Nuvem.
+3. Crie uma conta com e-mail e senha ou entre.
+4. NO APARELHO/NAVEGADOR ONDE AS OS ANTIGAS ESTÃO VISÍVEIS, clique em "Enviar dados deste aparelho para a nuvem".
+5. No atalho da Tela de Início ou outro aparelho, entre com o mesmo login e clique em "Baixar dados da nuvem".
