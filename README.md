@@ -1,3 +1,3 @@
-# Vinicar Auto Center - V3
+# Vinicar OS
 
-Única alteração desta versão: o texto “Assinatura do cliente” foi alterado para “Assinatura do responsável”, inclusive na OS/impressão.
+Adicionados Caixa e Pagamentos Pendentes. Mantém assinatura do responsável e demais funções.
