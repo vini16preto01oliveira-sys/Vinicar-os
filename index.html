@@ -59,7 +59,7 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 <header><img src="logo-vinicar.jpeg" alt="Vinicar Auto Center"><div class="brand-text"><b>VINICAR <span>AUTO CENTER</span></b><div>Seu carro, nossa paixão • Sistema de Ordem de Serviço</div></div></header>
 <nav>
 <button onclick="show('painel')">Painel</button><button onclick="show('entrada')">Entrada</button>
-<button onclick="show('os')">Ordens de Serviço</button><button onclick="show('clientes')">Clientes</button><button onclick="show('caixa')">Caixa</button><button onclick="show('pendentes')">Pagamentos Pendentes</button><button onclick="show('nuvem')">Nuvem</button>
+<button onclick="show('os')">Ordens de Serviço</button><button onclick="show('clientes')">Clientes</button><button onclick="show('caixa')">Caixa</button><button onclick="show('pendentes')">Pagamentos Pendentes</button><button onclick="show('entregues')">Entregues</button><button onclick="show('nuvem')">Nuvem</button>
 </nav>
 <main>
 <section id="painel">
@@ -112,6 +112,15 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 
 <section id="clientes" class="hide"><div class="card"><h2>Clientes e veículos</h2><div id="listaClientes"></div></div></section>
 <section id="caixa" class="hide"><div class="grid"><div class="card stat">Entradas<br><b id="cxEntradas">R$ 0,00</b></div><div class="card stat">Saídas<br><b id="cxSaidas">R$ 0,00</b></div><div class="card stat">Saldo<br><b id="cxSaldo">R$ 0,00</b></div><div class="card stat">Pendentes<br><b id="cxPendentes">R$ 0,00</b></div></div><div class="card"><h2>Entrada e saída de caixa</h2><div class="four row"><div><label>Tipo</label><select id="movTipo"><option>Entrada</option><option>Saída</option></select></div><div><label>Descrição</label><input id="movDesc"></div><div><label>Valor</label><input id="movValor" type="number" step="0.01"></div><div><label>Forma de pagamento</label><select id="movForma"><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option><option>Outro</option></select></div></div><div class="actions"><button class="primary" onclick="addMov()">Registrar movimento</button></div><hr><div id="listaCaixa"></div></div></section><section id="pendentes" class="hide"><div class="card"><h2>Pagamentos Pendentes</h2><div class="row"><div><label>Cliente</label><input id="penCliente"></div><div><label>Referência / OS</label><input id="penRef"></div></div><div class="three row"><div><label>Valor pendente</label><input id="penValor" type="number" step="0.01"></div><div><label>Vencimento</label><input id="penVenc" type="date"></div><div><label>Observação</label><input id="penObs"></div></div><div class="actions"><button class="primary" onclick="addPendente()">Adicionar pendência</button></div><hr><div id="listaPendentes"></div></div></section>
+
+<section id="entregues" class="hide">
+  <div class="card">
+    <h2>Veículos Entregues</h2>
+    <input id="buscaEntregues" placeholder="Pesquisar por OS, cliente, placa ou veículo" oninput="renderEntregues()">
+    <div id="listaEntregues"></div>
+  </div>
+</section>
+
 <section id="nuvem" class="hide">
   <div class="card">
     <h2>☁️ Backup e sincronização na nuvem</h2>
@@ -285,14 +294,44 @@ function addPendente(){let c=penCliente.value.trim(),v=Number(penValor.value||0)
 function receberPendente(id){let p=pendentes.find(x=>x.id===id);if(!p||!confirm('Confirmar recebimento de '+money(p.valor)+'?'))return;p.status='Pago';caixa.unshift({id:Date.now(),tipo:'Entrada',desc:'Recebimento - '+p.cliente+(p.ref?' - '+p.ref:''),valor:p.valor,forma:'Não informado',data:new Date().toLocaleString('pt-BR')});saveFin()}
 function delPendente(id){if(confirm('Excluir esta pendência?')){pendentes=pendentes.filter(x=>x.id!==id);saveFin()}}
 function renderFin(){if(!document.getElementById('cxEntradas'))return;let e=caixa.filter(x=>x.tipo==='Entrada').reduce((a,x)=>a+Number(x.valor),0),s=caixa.filter(x=>x.tipo==='Saída').reduce((a,x)=>a+Number(x.valor),0),p=pendentes.filter(x=>x.status==='Pendente').reduce((a,x)=>a+Number(x.valor),0);cxEntradas.textContent=money(e);cxSaidas.textContent=money(s);cxSaldo.textContent=money(e-s);cxPendentes.textContent=money(p);listaCaixa.innerHTML=caixa.length?`<table><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Forma</th><th>Valor</th><th></th></tr>${caixa.map(x=>`<tr><td>${x.data}</td><td>${x.tipo}</td><td>${x.desc}</td><td>${x.forma}</td><td>${money(x.valor)}</td><td><button class="danger" onclick="delMov(${x.id})">X</button></td></tr>`).join('')}</table>`:'Nenhum movimento.';listaPendentes.innerHTML=pendentes.length?`<table><tr><th>Cliente</th><th>OS/Ref.</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr>${pendentes.map(x=>`<tr><td>${x.cliente}</td><td>${x.ref||'—'}</td><td>${x.venc||'—'}</td><td>${money(x.valor)}</td><td>${x.status}</td><td>${x.status==='Pendente'?`<button class="success" onclick="receberPendente(${x.id})">Receber</button> `:''}<button class="danger" onclick="delPendente(${x.id})">X</button></td></tr>`).join('')}</table>`:'Nenhum pagamento pendente.'}
+
+function renderEntregues(){
+  const campo=document.getElementById('buscaEntregues');
+  if(!campo || !document.getElementById('listaEntregues')) return;
+  const q=(campo.value||'').toLowerCase();
+  const arr=data
+    .filter(o=>o.status==='Entregue')
+    .filter(o=>[o.num,o.cliente,o.placa,o.veiculo].join(' ').toLowerCase().includes(q));
+  listaEntregues.innerHTML=arr.length?arr.map(o=>`<div class="card os-card" id="ent-${o.id}">
+    <div class="os-head">
+      <div>
+        <h3>OS #${o.num}</h3>
+        <b>${o.cliente}</b> — ${o.veiculo||'Veículo'} • ${o.placa}
+      </div>
+      <div><span class="badge">Entregue</span></div>
+    </div>
+    <div class="muted">Entrada: ${o.entrada}${o.saida?' • Saída: '+o.saida:''}</div>
+    <p>${o.defeito||''}</p>
+    <div class="summary">
+      <b>Total da OS:</b> <span class="money">${money(total(o))}</span><br>
+      <span class="muted">Pagamento: ${o.pagamento||'Não informado'}</span>
+    </div>
+    <div class="actions no-print">
+      <button class="secondary" onclick="show('os');document.getElementById('busca').value='${o.num}';renderOS()">Abrir OS</button>
+      <button class="success" onclick="whatsapp(${o.id})">WhatsApp</button>
+      <button onclick="imprimir(${o.id})">Imprimir/PDF</button>
+    </div>
+  </div>`).join(''):'Nenhum veículo entregue.';
+}
+
 function render(){
  sOficina.textContent=data.filter(o=>o.status!=='Entregue').length;
  sServico.textContent=data.filter(o=>o.status==='Em serviço').length;
  sPronto.textContent=data.filter(o=>o.status==='Pronto').length;
  sEntregue.textContent=data.filter(o=>o.status==='Entregue').length;
- recentes.innerHTML=data.slice(0,5).map(o=>`<p><b>OS #${o.num}</b> — ${o.placa} — ${o.cliente} — ${o.status} — ${money(total(o))}</p>`).join('')||'Nenhuma OS cadastrada.';
+ recentes.innerHTML=data.filter(o=>o.status!=='Entregue').slice(0,5).map(o=>`<p><b>OS #${o.num}</b> — ${o.placa} — ${o.cliente} — ${o.status} — ${money(total(o))}</p>`).join('')||'Nenhuma OS ativa na oficina.';
  listaClientes.innerHTML=data.length?`<table><tr><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Placa</th><th>Última OS</th></tr>${data.map(o=>`<tr><td>${o.cliente}</td><td>${o.fone||''}</td><td>${o.veiculo||''}</td><td>${o.placa}</td><td>#${o.num}</td></tr>`).join('')}</table>`:'Nenhum cliente cadastrado.';
- renderOS();renderFin()
+ renderOS();renderEntregues();renderFin()
 }
 render();
 </script>
