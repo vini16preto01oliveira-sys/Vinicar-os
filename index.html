@@ -118,7 +118,7 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 <div id="listaOS"></div></div></section>
 
 <section id="clientes" class="hide"><div class="card"><h2>Clientes e veículos</h2><div id="listaClientes"></div></div></section>
-<section id="caixa" class="hide"><div class="grid"><div class="card stat">Entradas<br><b id="cxEntradas">R$ 0,00</b></div><div class="card stat">Saídas<br><b id="cxSaidas">R$ 0,00</b></div><div class="card stat">Saldo<br><b id="cxSaldo">R$ 0,00</b></div><div class="card stat">Pendentes<br><b id="cxPendentes">R$ 0,00</b></div></div><div class="card"><h2>Entrada e saída de caixa</h2><div class="four row"><div><label>Tipo</label><select id="movTipo"><option>Entrada</option><option>Saída</option></select></div><div><label>Descrição</label><input id="movDesc"></div><div><label>Valor</label><input id="movValor" type="number" step="0.01"></div><div><label>Forma de pagamento</label><select id="movForma"><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option><option>Outro</option></select></div></div><div class="actions"><button class="primary" onclick="addMov()">Registrar movimento</button></div><hr><div id="listaCaixa"></div></div></section><section id="pendentes" class="hide"><div class="card"><h2>Pagamentos Pendentes</h2><div class="row"><div><label>Cliente</label><input id="penCliente"></div><div><label>Referência / OS</label><input id="penRef"></div></div><div class="three row"><div><label>Valor pendente</label><input id="penValor" type="number" step="0.01"></div><div><label>Vencimento</label><input id="penVenc" type="date"></div><div><label>Observação</label><input id="penObs"></div></div><div class="actions"><button class="primary" onclick="addPendente()">Adicionar pendência</button></div><hr><div id="listaPendentes"></div></div></section>
+<section id="caixa" class="hide"><div class="grid"><div class="card stat">Entradas<br><b id="cxEntradas">R$ 0,00</b></div><div class="card stat">Saídas<br><b id="cxSaidas">R$ 0,00</b></div><div class="card stat">Saldo<br><b id="cxSaldo">R$ 0,00</b></div><div class="card stat">Pendentes<br><b id="cxPendentes">R$ 0,00</b></div></div><div class="card"><h2>Entrada e saída de caixa</h2><div class="four row"><div><label>Tipo</label><select id="movTipo"><option>Entrada</option><option>Saída</option></select></div><div><label>Descrição</label><input id="movDesc"></div><div><label>Valor</label><input id="movValor" type="number" step="0.01"></div><div><label>Forma de pagamento</label><select id="movForma"><option>Pix</option><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Transferência</option><option>Outro</option></select></div></div><div class="actions"><button class="primary" onclick="addMov()">Registrar movimento</button></div><hr><div id="listaCaixa"></div></div></section><section id="pendentes" class="hide"><div class="card"><h2>Pagamentos Pendentes</h2><div class="row"><div><label>Cliente</label><input id="penCliente"></div><div><label>WhatsApp</label><input id="penFone" placeholder="(73) 99999-9999"></div><div><label>Referência / OS</label><input id="penRef"></div></div><div class="three row"><div><label>Valor pendente</label><input id="penValor" type="number" step="0.01"></div><div><label>Vencimento</label><input id="penVenc" type="date"></div><div><label>Observação</label><input id="penObs"></div></div><div class="actions"><button class="primary" onclick="addPendente()">Adicionar pendência</button></div><hr><div id="listaPendentes"></div></div></section>
 
 <section id="entregues" class="hide">
   <div class="card">
@@ -220,7 +220,7 @@ function carregarPix(){let k=document.getElementById('pixKey'),f=document.getEle
 function salvarPix(){pixConfig={key:(document.getElementById('pixKey')?.value||'').trim(),favorecido:(document.getElementById('pixFavorecido')?.value||'Vinicar Auto Center').trim()};localStorage.setItem('vinicar_pix_v1',JSON.stringify(pixConfig));if(window.vinicarCloudAutoSave)window.vinicarCloudAutoSave();alert('Chave PIX salva.')}
 async function copiarPix(){if(!pixConfig.key){alert('Cadastre primeiro a chave PIX.');return}try{await navigator.clipboard.writeText(pixConfig.key);alert('Chave PIX copiada.')}catch{prompt('Copie a chave PIX:',pixConfig.key)}}
 function mensagemPronto(o){let l=[`Olá, ${o.cliente}!`,`Seu veículo ${o.veiculo||''}${o.placa?' - placa '+o.placa:''} está pronto na Vinicar Auto Center.`,`Valor total da OS: ${money(total(o))}.`];if(pixConfig.key){l.push('','Pagamento via PIX:',`Chave PIX: ${pixConfig.key}`);if(pixConfig.favorecido)l.push(`Favorecido: ${pixConfig.favorecido}`)}l.push('','Vinicar Auto Center','Seu carro, nossa paixão.');return l.join('\n')}
-function whatsappPronto(o){let tel=(o.fone||'').replace(/\D/g,'');if(!tel){alert('Status salvo como Pronto, mas esta OS não possui WhatsApp cadastrado.');return}if(!tel.startsWith('55'))tel='55'+tel;if(confirm('Status alterado para Pronto. Abrir o WhatsApp com a mensagem e a chave PIX?'))window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensagemPronto(o))}`,'_blank')}
+function whatsappPronto(o){let tel=(o.fone||'').replace(/\D/g,'');if(!tel){alert('Status salvo como Pronto, mas esta OS não possui WhatsApp cadastrado.');return}if(!tel.startsWith('55'))tel='55'+tel;if(confirm('Status alterado para Pronto. Abrir o WhatsApp com a mensagem e a chave PIX?'))window.location.href=`https://wa.me/${tel}?text=${encodeURIComponent(mensagemPronto(o))}`}
 
 function statusOS(id){
  let o=data.find(x=>x.id===id);let opts=['Aguardando','Em serviço','Aguardando peças','Pronto','Entregue'];
@@ -306,10 +306,37 @@ let caixa=JSON.parse(localStorage.getItem('vinicar_caixa_v1')||'[]');let pendent
 function saveFin(){localStorage.setItem('vinicar_caixa_v1',JSON.stringify(caixa));localStorage.setItem('vinicar_pendentes_v1',JSON.stringify(pendentes));renderFin();if(window.vinicarCloudAutoSave)window.vinicarCloudAutoSave()}
 function addMov(){let d=movDesc.value.trim(),v=Number(movValor.value||0);if(!d||v<=0){alert('Preencha descrição e valor.');return}caixa.unshift({id:Date.now(),tipo:movTipo.value,desc:d,valor:v,forma:movForma.value,data:new Date().toLocaleString('pt-BR')});movDesc.value='';movValor.value='';saveFin()}
 function delMov(id){if(confirm('Excluir este movimento?')){caixa=caixa.filter(x=>x.id!==id);saveFin()}}
-function addPendente(){let c=penCliente.value.trim(),v=Number(penValor.value||0);if(!c||v<=0){alert('Preencha cliente e valor.');return}pendentes.unshift({id:Date.now(),cliente:c,ref:penRef.value,valor:v,venc:penVenc.value,obs:penObs.value,status:'Pendente'});penCliente.value='';penRef.value='';penValor.value='';penVenc.value='';penObs.value='';saveFin()}
+function addPendente(){let c=penCliente.value.trim(),v=Number(penValor.value||0);if(!c||v<=0){alert('Preencha cliente e valor.');return}pendentes.unshift({id:Date.now(),cliente:c,fone:penFone.value,ref:penRef.value,valor:v,venc:penVenc.value,obs:penObs.value,status:'Pendente',ultimaCobranca:''});penCliente.value='';penFone.value='';penRef.value='';penValor.value='';penVenc.value='';penObs.value='';saveFin()}
 function receberPendente(id){let p=pendentes.find(x=>x.id===id);if(!p||!confirm('Confirmar recebimento de '+money(p.valor)+'?'))return;p.status='Pago';caixa.unshift({id:Date.now(),tipo:'Entrada',desc:'Recebimento - '+p.cliente+(p.ref?' - '+p.ref:''),valor:p.valor,forma:'Não informado',data:new Date().toLocaleString('pt-BR')});saveFin()}
 function delPendente(id){if(confirm('Excluir esta pendência?')){pendentes=pendentes.filter(x=>x.id!==id);saveFin()}}
-function renderFin(){if(!document.getElementById('cxEntradas'))return;let e=caixa.filter(x=>x.tipo==='Entrada').reduce((a,x)=>a+Number(x.valor),0),s=caixa.filter(x=>x.tipo==='Saída').reduce((a,x)=>a+Number(x.valor),0),p=pendentes.filter(x=>x.status==='Pendente').reduce((a,x)=>a+Number(x.valor),0);cxEntradas.textContent=money(e);cxSaidas.textContent=money(s);cxSaldo.textContent=money(e-s);cxPendentes.textContent=money(p);listaCaixa.innerHTML=caixa.length?`<table><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Forma</th><th>Valor</th><th></th></tr>${caixa.map(x=>`<tr><td>${x.data}</td><td>${x.tipo}</td><td>${x.desc}</td><td>${x.forma}</td><td>${money(x.valor)}</td><td><button class="danger" onclick="delMov(${x.id})">X</button></td></tr>`).join('')}</table>`:'Nenhum movimento.';listaPendentes.innerHTML=pendentes.length?`<table><tr><th>Cliente</th><th>OS/Ref.</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr>${pendentes.map(x=>`<tr><td>${x.cliente}</td><td>${x.ref||'—'}</td><td>${x.venc||'—'}</td><td>${money(x.valor)}</td><td>${x.status}</td><td>${x.status==='Pendente'?`<button class="success" onclick="receberPendente(${x.id})">Receber</button> `:''}<button class="danger" onclick="delPendente(${x.id})">X</button></td></tr>`).join('')}</table>`:'Nenhum pagamento pendente.'}
+
+function hojeISO(){let d=new Date(),m=String(d.getMonth()+1).padStart(2,'0'),dia=String(d.getDate()).padStart(2,'0');return `${d.getFullYear()}-${m}-${dia}`}
+function pendenteVencido(p){return p.status==='Pendente'&&p.venc&&p.venc<=hojeISO()}
+function mensagemCobranca(p){
+ let l=[`Olá, ${p.cliente}!`,`Passando para lembrar do pagamento pendente${p.ref?' referente à '+p.ref:''}.`,`Valor: ${money(p.valor)}.`];
+ if(p.venc)l.push(`Vencimento: ${p.venc.split('-').reverse().join('/')}.`);
+ if(pixConfig&&pixConfig.key){l.push('','Pagamento via PIX:',`Chave PIX: ${pixConfig.key}`);if(pixConfig.favorecido)l.push(`Favorecido: ${pixConfig.favorecido}`)}
+ l.push('','Vinicar Auto Center','Seu carro, nossa paixão.');
+ return l.join('\n')
+}
+function cobrarPendente(id){
+ let p=pendentes.find(x=>x.id===id);if(!p)return;
+ let tel=(p.fone||'').replace(/\D/g,'');
+ if(!tel){alert('Cadastre o WhatsApp deste pagamento pendente para fazer a cobrança.');return}
+ if(!tel.startsWith('55'))tel='55'+tel;
+ p.ultimaCobranca=new Date().toLocaleString('pt-BR');saveFin();
+ window.location.href=`https://wa.me/${tel}?text=${encodeURIComponent(mensagemCobranca(p))}`;
+}
+function avisarCobrancasDoDia(){
+ let hoje=hojeISO(),lista=pendentes.filter(p=>p.status==='Pendente'&&p.venc===hoje);
+ if(!lista.length)return;
+ let chave='vinicar_aviso_cobranca_'+hoje;
+ if(sessionStorage.getItem(chave))return;
+ sessionStorage.setItem(chave,'1');
+ setTimeout(()=>alert(`Você tem ${lista.length} pagamento(s) vencendo hoje. Abra "Pagamentos Pendentes" e toque em "Cobrar".`),500);
+}
+
+function renderFin(){if(!document.getElementById('cxEntradas'))return;let e=caixa.filter(x=>x.tipo==='Entrada').reduce((a,x)=>a+Number(x.valor),0),s=caixa.filter(x=>x.tipo==='Saída').reduce((a,x)=>a+Number(x.valor),0),p=pendentes.filter(x=>x.status==='Pendente').reduce((a,x)=>a+Number(x.valor),0);cxEntradas.textContent=money(e);cxSaidas.textContent=money(s);cxSaldo.textContent=money(e-s);cxPendentes.textContent=money(p);listaCaixa.innerHTML=caixa.length?`<table><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Forma</th><th>Valor</th><th></th></tr>${caixa.map(x=>`<tr><td>${x.data}</td><td>${x.tipo}</td><td>${x.desc}</td><td>${x.forma}</td><td>${money(x.valor)}</td><td><button class="danger" onclick="delMov(${x.id})">X</button></td></tr>`).join('')}</table>`:'Nenhum movimento.';listaPendentes.innerHTML=pendentes.length?`<table><tr><th>Cliente</th><th>WhatsApp</th><th>OS/Ref.</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr>${pendentes.map(x=>`<tr><td>${x.cliente}</td><td>${x.fone||'—'}</td><td>${x.ref||'—'}</td><td>${x.venc||'—'} ${pendenteVencido(x)?'<span class="badge">Cobrar</span>':''}</td><td>${money(x.valor)}</td><td>${x.status}</td><td>${x.status==='Pendente'?`<button class="success" onclick="receberPendente(${x.id})">Receber</button> <button class="primary" onclick="cobrarPendente(${x.id})">Cobrar</button> `:''}<button class="danger" onclick="delPendente(${x.id})">X</button></td></tr>`).join('')}</table>`:'Nenhum pagamento pendente.'}
 
 function renderEntregues(){
   const campo=document.getElementById('buscaEntregues');
@@ -349,7 +376,7 @@ function render(){
  listaClientes.innerHTML=data.length?`<table><tr><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Placa</th><th>Última OS</th></tr>${data.map(o=>`<tr><td>${o.cliente}</td><td>${o.fone||''}</td><td>${o.veiculo||''}</td><td>${o.placa}</td><td>#${o.num}</td></tr>`).join('')}</table>`:'Nenhum cliente cadastrado.';
  renderOS();renderEntregues();renderFin()
 }
-render();carregarPix();
+render();carregarPix();avisarCobrancasDoDia();
 </script>
 
 <script type="module">
