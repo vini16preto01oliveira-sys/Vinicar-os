@@ -53,7 +53,14 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
 #cloudStatus.err{border-left:5px solid #b00020}
 #firebaseConfigPaste{min-height:180px;font-family:monospace;font-size:12px}
 
-</style>
+@media print{
+@page{size:A4;margin:7mm}body{font-size:10px!important;line-height:1.15!important}main{padding:0!important}
+.os-card{margin:0!important;padding:0!important}.os-card .details{font-size:10px!important}
+.os-card .details h3{font-size:12px!important;margin:5px 0 3px!important}.os-card .details p{margin:4px 0!important}
+.os-card .details hr{margin:5px 0!important}.os-card .details table th,.os-card .details table td{padding:3px 4px!important;font-size:9px!important}
+.print-header{padding-bottom:4px!important;margin-bottom:5px!important;gap:8px!important}.print-header img{width:85px!important;max-height:52px!important}
+.os-print-title{font-size:16px!important}.company-meta{font-size:9px!important;line-height:1.2!important}.photo-grid{display:none!important}
+}</style>
 </head>
 <body>
 <header><img src="logo-vinicar.jpeg" alt="Vinicar Auto Center"><div class="brand-text"><b>VINICAR <span>AUTO CENTER</span></b><div>Seu carro, nossa paixão • Sistema de Ordem de Serviço</div></div></header>
@@ -158,7 +165,7 @@ hr{border:0;border-top:1px solid #eee;margin:16px 0}
       <button class="secondary" onclick="cloudBaixar()">Baixar dados da nuvem para este aparelho</button>
     </div>
     <p class="muted"><b>Importante:</b> faça o primeiro envio pelo navegador/aparelho onde as OS antigas ainda aparecem. Depois, entre com o mesmo login nos outros aparelhos.</p>
-  </div>
+  <hr><h3>Chave PIX da oficina</h3><div class="row"><div><label>Chave PIX</label><input id="pixKey" placeholder="CPF, CNPJ, telefone, e-mail ou chave aleatória"></div><div><label>Favorecido</label><input id="pixFavorecido" placeholder="Vinicar Auto Center"></div></div><div class="actions"><button class="primary" onclick="salvarPix()">Salvar PIX</button><button class="secondary" onclick="copiarPix()">Copiar chave PIX</button></div></div>
 </section>
 
 </main>
@@ -207,10 +214,19 @@ function addItem(id,tipo){
  let o=data.find(x=>x.id===id);o[tipo].push({desc,qtd,unit});save()
 }
 function removeItem(id,tipo,i){let o=data.find(x=>x.id===id);o[tipo].splice(i,1);save()}
+
+let pixConfig=JSON.parse(localStorage.getItem('vinicar_pix_v1')||'{"key":"","favorecido":"Vinicar Auto Center"}');
+function carregarPix(){let k=document.getElementById('pixKey'),f=document.getElementById('pixFavorecido');if(k)k.value=pixConfig.key||'';if(f)f.value=pixConfig.favorecido||'Vinicar Auto Center'}
+function salvarPix(){pixConfig={key:(document.getElementById('pixKey')?.value||'').trim(),favorecido:(document.getElementById('pixFavorecido')?.value||'Vinicar Auto Center').trim()};localStorage.setItem('vinicar_pix_v1',JSON.stringify(pixConfig));if(window.vinicarCloudAutoSave)window.vinicarCloudAutoSave();alert('Chave PIX salva.')}
+async function copiarPix(){if(!pixConfig.key){alert('Cadastre primeiro a chave PIX.');return}try{await navigator.clipboard.writeText(pixConfig.key);alert('Chave PIX copiada.')}catch{prompt('Copie a chave PIX:',pixConfig.key)}}
+function mensagemPronto(o){let l=[`Olá, ${o.cliente}!`,`Seu veículo ${o.veiculo||''}${o.placa?' - placa '+o.placa:''} está pronto na Vinicar Auto Center.`,`Valor total da OS: ${money(total(o))}.`];if(pixConfig.key){l.push('','Pagamento via PIX:',`Chave PIX: ${pixConfig.key}`);if(pixConfig.favorecido)l.push(`Favorecido: ${pixConfig.favorecido}`)}l.push('','Vinicar Auto Center','Seu carro, nossa paixão.');return l.join('\n')}
+function whatsappPronto(o){let tel=(o.fone||'').replace(/\D/g,'');if(!tel){alert('Status salvo como Pronto, mas esta OS não possui WhatsApp cadastrado.');return}if(!tel.startsWith('55'))tel='55'+tel;if(confirm('Status alterado para Pronto. Abrir o WhatsApp com a mensagem e a chave PIX?'))window.open(`https://wa.me/${tel}?text=${encodeURIComponent(mensagemPronto(o))}`,'_blank')}
+
 function statusOS(id){
  let o=data.find(x=>x.id===id);let opts=['Aguardando','Em serviço','Aguardando peças','Pronto','Entregue'];
- let s=prompt('Novo status:\\n'+opts.join(' | '),o.status);if(!s)return;
- o.status=s;if(s.toLowerCase()==='entregue'&&!o.saida)o.saida=new Date().toLocaleString('pt-BR');save()
+ let anterior=o.status;let s=prompt('Novo status:\n'+opts.join(' | '),o.status);if(!s)return;
+ o.status=s;if(s.toLowerCase()==='entregue'&&!o.saida)o.saida=new Date().toLocaleString('pt-BR');save();
+ if(s==='Pronto'&&anterior!=='Pronto')setTimeout(()=>whatsappPronto(o),250)
 }
 function editarOS(id){
  let o=data.find(x=>x.id===id);
@@ -333,7 +349,7 @@ function render(){
  listaClientes.innerHTML=data.length?`<table><tr><th>Cliente</th><th>Telefone</th><th>Veículo</th><th>Placa</th><th>Última OS</th></tr>${data.map(o=>`<tr><td>${o.cliente}</td><td>${o.fone||''}</td><td>${o.veiculo||''}</td><td>${o.placa}</td><td>#${o.num}</td></tr>`).join('')}</table>`:'Nenhum cliente cadastrado.';
  renderOS();renderEntregues();renderFin()
 }
-render();
+render();carregarPix();
 </script>
 
 <script type="module">
@@ -404,7 +420,7 @@ function cloudPayload(){
   return {
     orders:(data||[]).map(stripLocalMedia),
     caixa:JSON.parse(JSON.stringify(caixa||[])),
-    pendentes:JSON.parse(JSON.stringify(pendentes||[]))
+    pendentes:JSON.parse(JSON.stringify(pendentes||[])),pix:JSON.parse(JSON.stringify(pixConfig||{}))
   };
 }
 
@@ -445,6 +461,7 @@ async function applyCloudState(s,showAlert){
   if(Array.isArray(s.orders)) data=mergeOrdersPreservingLocalMedia(s.orders);
   if(Array.isArray(s.caixa)) caixa=s.caixa;
   if(Array.isArray(s.pendentes)) pendentes=s.pendentes;
+  if(s.pix){pixConfig=s.pix;localStorage.setItem('vinicar_pix_v1',JSON.stringify(pixConfig));carregarPix();}
   localStorage.setItem('vinicar_os_v2',JSON.stringify(data));
   localStorage.setItem('vinicar_caixa_v1',JSON.stringify(caixa));
   localStorage.setItem('vinicar_pendentes_v1',JSON.stringify(pendentes));
